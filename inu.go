@@ -12,6 +12,7 @@ import (
 
 	"github.com/dogbin/inu/dogbin"
 
+	"github.com/atotto/clipboard"
 	"github.com/urfave/cli"
 )
 
@@ -19,6 +20,7 @@ var server string
 var slug string
 var file string
 var jsonOutput bool
+var clipboardOutput bool
 
 func main() {
 	serverFlag := cli.StringFlag{
@@ -45,6 +47,11 @@ func main() {
 		Usage:       "Outputs the result as JSON",
 		Destination: &jsonOutput,
 	}
+	clipboardFlag := cli.BoolFlag{
+		Name:        "copy, c",
+		Usage:       "Additionally puts the created URL in your clipboard",
+		Destination: &clipboardOutput,
+	}
 
 	app := cli.NewApp()
 	app.Name = "inu"
@@ -64,6 +71,7 @@ func main() {
 		slugFlag,
 		fileFlag,
 		jsonFlag,
+		clipboardFlag,
 	}
 	app.Commands = []cli.Command{
 		{
@@ -76,6 +84,7 @@ func main() {
 				slugFlag,
 				fileFlag,
 				jsonFlag,
+				clipboardFlag,
 			},
 		},
 		{
@@ -91,6 +100,11 @@ func main() {
 					Destination: &slug,
 				},
 				jsonFlag,
+				cli.BoolFlag{
+					Name:        "copy, c",
+					Usage:       "Additionally puts the retrieved content in your clipboard",
+					Destination: &clipboardOutput,
+				},
 			},
 		},
 	}
@@ -132,6 +146,13 @@ func put(c *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
+
+	if clipboardOutput {
+		if err := clipboard.WriteAll(result.Url); err != nil {
+			return err
+		}
+	}
+
 	if jsonOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
@@ -184,6 +205,13 @@ func get(c *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
+
+	if clipboardOutput {
+		if err := clipboard.WriteAll(doc.Content); err != nil {
+			return err
+		}
+	}
+
 	if jsonOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
