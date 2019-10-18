@@ -10,6 +10,12 @@ import (
 	"net/url"
 )
 
+// Public consts
+const (
+	DogbinServerURL   = "del.dog"
+	HastebinServerURL = "hastebin.com"
+)
+
 // Server defines the dogbin or hastebin server to communicate with
 type Server struct {
 	server string
@@ -49,6 +55,19 @@ type Document struct {
 	ViewCount int    `json:"viewCount"`
 }
 
+func newDocument(w *Wrapper) *Document {
+	d := &Document{
+		Slug:    w.Slug,
+		Content: w.Content,
+	}
+
+	if w.Document != nil {
+		d.IsUrl = w.Document.IsUrl
+		d.ViewCount = w.Document.ViewCount
+	}
+	return d
+}
+
 // Put uploads content to the server,
 // if a slug is supplied it is assumed that the server supports
 // the extended api used by dogbin.
@@ -56,6 +75,7 @@ func (d Server) Put(slug string, content string) (*UploadResult, error) {
 	if content == "" {
 		return nil, errors.New("no content was provided")
 	}
+
 	u, err := d.putUrl()
 	if err != nil {
 		return nil, err
@@ -102,43 +122,43 @@ func (d Server) Get(slug string) (*Document, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	r, err := http.Get(u)
 	if err != nil {
 		return nil, err
 	}
+	defer r.Body.Close()
 
-	if r.StatusCode != 200 {
-		message := new(Message)
-		defer r.Body.Close()
-		_ = json.NewDecoder(r.Body).Decode(message)
+	if r.StatusCode != http.StatusOK {
+		message := &Message{}
+		if err = json.NewDecoder(r.Body).Decode(message); err != nil {
+			return nil, fmt.Errorf("unable to make request (%s) and decode response: %w", r.Status, err)
+		}
+
 		if message.Message == "" {
 			message.Message = r.Status
 		}
-		return nil, errors.New(message.Message)
+		return nil, fmt.Errorf("unable to make request: %s", message.Message)
 	}
 
-	wrapper := new(Wrapper)
-	defer r.Body.Close()
-	err = json.NewDecoder(r.Body).Decode(wrapper)
-
-	document := Document{
-		Slug:    wrapper.Slug,
-		Content: wrapper.Content,
+	wrapper := &Wrapper{}
+	if err = json.NewDecoder(r.Body).Decode(wrapper); err != nil {
+		return nil, fmt.Errorf("unable to decode response: %w", err)
 	}
-	if wrapper.Document != nil {
-		document.IsUrl = wrapper.Document.IsUrl
-		document.ViewCount = wrapper.Document.ViewCount
+	if wrapper == nil {
+		return nil, errors.New("unable to decode response: document is empty")
 	}
 
-	return &document, err
+	return newDocument(wrapper), err
 }
 
 // baseUrl returns the base Url for the server, assuming https if no scheme has been supplied
 func (d Server) baseUrl() (string, error) {
 	srv, err := url.Parse(d.server)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("unable to parse server URL: %w", err)
 	}
+
 	if srv.Scheme == "" {
 		srv.Scheme = "https"
 	}
@@ -149,8 +169,9 @@ func (d Server) baseUrl() (string, error) {
 func (d Server) slugUrl(slug string) (string, error) {
 	base, err := d.baseUrl()
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("unable to get base URL: %w", err)
 	}
+
 	return fmt.Sprintf("%s/%s", base, slug), nil
 }
 
@@ -158,8 +179,9 @@ func (d Server) slugUrl(slug string) (string, error) {
 func (d Server) getUrl(slug string) (string, error) {
 	base, err := d.baseUrl()
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("unable to get base URL: %w", err)
 	}
+
 	return fmt.Sprintf("%s/documents/%s", base, slug), nil
 }
 
@@ -167,8 +189,9 @@ func (d Server) getUrl(slug string) (string, error) {
 func (d Server) putUrl() (string, error) {
 	base, err := d.baseUrl()
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("unable to get base URL: %w", err)
 	}
+
 	return fmt.Sprintf("%s/documents", base), nil
 }
 
@@ -177,12 +200,12 @@ func NewServer(server string) Server {
 	return Server{server: server}
 }
 
-// Dogbin returns a Server instance configured for the public del.dog dogbin instance
+// Dogbin returns a Server instance configured for the public 'del.dog' dogbin instance
 func Dogbin() Server {
-	return Server{server: "del.dog"}
+	return Server{server: DogbinServerURL}
 }
 
-// Hastebin returns a Server instance configured for the public hastebin.com hastebin instance
+// Hastebin returns a Server instance configured for the public 'hastebin.com' hastebin instance
 func Hastebin() Server {
-	return Server{server: "hastebin.com"}
+	return Server{server: HastebinServerURL}
 }

@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -16,13 +15,29 @@ import (
 	"github.com/urfave/cli"
 )
 
-var server string
-var slug string
-var file string
-var jsonOutput bool
-var clipboardOutput bool
+const (
+	appAuthorName  = "Till Kottmann"
+	appAuthorEmail = "me@deletescape.ch"
+	appCopyright   = "(c) 2019 " + appAuthorName
+	appName        = "inu"
+	appVersion     = "v0.1.2"
+)
+
+var (
+	file            string
+	server          string
+	slug            string
+	clipboardOutput bool
+	jsonOutput      bool
+)
 
 func main() {
+	fileFlag := cli.StringFlag{
+		Name:        "file, f",
+		Usage:       "A file to upload to dogbin",
+		TakesFile:   true,
+		Destination: &file,
+	}
 	serverFlag := cli.StringFlag{
 		Name:        "server, r",
 		Usage:       "The dogbin/hastebin server to use",
@@ -36,12 +51,6 @@ func main() {
 		Usage:       "The slug to use instead of the server generated one [haste doesn't support this]",
 		Destination: &slug,
 	}
-	fileFlag := cli.StringFlag{
-		Name:        "file, f",
-		Usage:       "A file to upload to dogbin",
-		TakesFile:   true,
-		Destination: &file,
-	}
 	jsonFlag := cli.BoolFlag{
 		Name:        "json, j",
 		Usage:       "Outputs the result as JSON",
@@ -54,16 +63,16 @@ func main() {
 	}
 
 	app := cli.NewApp()
-	app.Name = "inu"
+	app.Name = appName
 	app.Usage = "Use dogbin/hastebin right from your terminal"
-	app.Copyright = "(c) 2019 Till Kottmann"
+	app.Copyright = appCopyright
 	app.Authors = []cli.Author{
 		{
-			Name:  "Till Kottmann",
-			Email: "me@deletescape.ch",
+			Name:  appAuthorName,
+			Email: appAuthorEmail,
 		},
 	}
-	app.Version = "v0.1.2"
+	app.Version = appVersion
 	app.EnableBashCompletion = true
 	app.Action = put
 	app.Flags = []cli.Flag{
@@ -116,7 +125,10 @@ func main() {
 }
 
 func put(c *cli.Context) error {
-	info, _ := os.Stdin.Stat()
+	info, err := os.Stdin.Stat()
+	if err != nil {
+		return fmt.Errorf("unable to stat os.Stdin: %w", err)
+	}
 
 	var content string
 	if info.Mode()&os.ModeNamedPipe != 0 {
@@ -127,8 +139,9 @@ func put(c *cli.Context) error {
 	} else if file != "" {
 		buf, err := ioutil.ReadFile(file)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to read the file '%s': %w", file, err)
 		}
+
 		content = string(buf)
 		if c.NArg() == 1 {
 			slug = c.Args()[0]
@@ -144,19 +157,18 @@ func put(c *cli.Context) error {
 
 	result, err := dogbin.NewServer(server).Put(slug, content)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return cli.NewExitError(err, 1)
 	}
 
 	if clipboardOutput {
-		if err := clipboard.WriteAll(result.Url); err != nil {
-			return err
+		if err = clipboard.WriteAll(result.Url); err != nil {
+			return fmt.Errorf("unable to write the output into the clipboard: %w", err)
 		}
 	}
 
 	if jsonOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-
 		return enc.Encode(result)
 	}
 
@@ -165,7 +177,6 @@ func put(c *cli.Context) error {
 }
 
 func get(c *cli.Context) error {
-
 	if c.NArg() == 1 {
 		slug = c.Args()[0]
 	}
@@ -174,17 +185,16 @@ func get(c *cli.Context) error {
 		return cli.ShowCommandHelp(c, "get")
 	}
 
-	var tmp = slug
-
-	if strings.ContainsRune(tmp, '/') {
+	pasteURL := slug
+	if strings.ContainsRune(pasteURL, '/') {
 		// convert slug to url to attempt to extract path + server from it
-		if !strings.HasPrefix(tmp, "http") && !strings.HasPrefix(tmp, "/") {
-			tmp = "https://" + tmp
+		if !strings.HasPrefix(pasteURL, "http") && !strings.HasPrefix(pasteURL, "/") {
+			pasteURL = "https://" + pasteURL
 		}
-		u, err := url.Parse(tmp)
+		u, err := url.Parse(pasteURL)
 		if err == nil {
 			if path := u.Path[1:]; path != "" {
-				tmp = path
+				pasteURL = path
 			}
 			u.Path = ""
 			u.RawQuery = ""
@@ -197,11 +207,11 @@ func get(c *cli.Context) error {
 		}
 	}
 
-	if strings.ContainsRune(tmp, '.') {
-		tmp = strings.SplitN(tmp, ".", 2)[0]
+	if strings.ContainsRune(pasteURL, '.') {
+		pasteURL = strings.SplitN(pasteURL, ".", 2)[0]
 	}
 
-	doc, err := dogbin.NewServer(server).Get(tmp)
+	doc, err := dogbin.NewServer(server).Get(pasteURL)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -224,15 +234,10 @@ func get(c *cli.Context) error {
 }
 
 func readStdin() string {
-	reader := bufio.NewReader(os.Stdin)
-	var input []rune
-
-	for {
-		ch, _, err := reader.ReadRune()
-		if err != nil && err == io.EOF {
-			break
-		}
-		input = append(input, ch)
+	var input []byte
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		input = append(input, scanner.Bytes()...)
 	}
 
 	return string(input)
