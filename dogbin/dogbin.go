@@ -80,7 +80,7 @@ func (d Server) Put(slug string, content string) (*UploadResult, error) {
 	if r.StatusCode != 200 {
 		message := new(Message)
 		defer r.Body.Close()
-		err = json.NewDecoder(r.Body).Decode(message)
+		_ = json.NewDecoder(r.Body).Decode(message)
 		if message.Message == "" {
 			message.Message = r.Status
 		}
@@ -89,7 +89,7 @@ func (d Server) Put(slug string, content string) (*UploadResult, error) {
 
 	result := new(UploadResult)
 	defer r.Body.Close()
-	err = json.NewDecoder(r.Body).Decode(result)
+	_ = json.NewDecoder(r.Body).Decode(result)
 
 	result.Url, err = d.slugUrl(result.Slug)
 
@@ -110,7 +110,7 @@ func (d Server) Get(slug string) (*Document, error) {
 	if r.StatusCode != 200 {
 		message := new(Message)
 		defer r.Body.Close()
-		err = json.NewDecoder(r.Body).Decode(message)
+		_ = json.NewDecoder(r.Body).Decode(message)
 		if message.Message == "" {
 			message.Message = r.Status
 		}

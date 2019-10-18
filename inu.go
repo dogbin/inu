@@ -58,7 +58,7 @@ func main() {
 	app.Usage = "Use dogbin/hastebin right from your terminal"
 	app.Copyright = "(c) 2019 Till Kottmann"
 	app.Authors = []cli.Author{
-		cli.Author{
+		{
 			Name:  "Till Kottmann",
 			Email: "me@deletescape.ch",
 		},
@@ -158,9 +158,9 @@ func put(c *cli.Context) error {
 		enc.SetIndent("", "  ")
 
 		return enc.Encode(result)
-	} else {
-		fmt.Println(result.Url)
 	}
+
+	fmt.Println(result.Url)
 	return nil
 }
 
@@ -217,9 +217,9 @@ func get(c *cli.Context) error {
 		enc.SetIndent("", "  ")
 
 		return enc.Encode(doc)
-	} else {
-		fmt.Println(doc.Content)
 	}
+
+	fmt.Println(doc.Content)
 	return nil
 }
 

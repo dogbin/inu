@@ -3,6 +3,7 @@
 > Use dogbin/hastebin from your cli
 
 [![GoDoc](https://godoc.org/github.com/dogbin/inu/dogbin?status.svg)](https://godoc.org/github.com/dogbin/inu/dogbin)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dogbin/inu)](https://goreportcard.com/report/github.com/dogbin/inu)
 
 ## Installation:
 
