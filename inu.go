@@ -22,6 +22,8 @@ func main() {
 		Name:        "server, r",
 		Usage:       "The dogbin/hastebin server to use",
 		Value:       "del.dog",
+		EnvVar:      "DOGBIN_SERVER",
+		FilePath:    "~/.inu/server",
 		Destination: &server,
 	}
 	slugFlag := cli.StringFlag{
