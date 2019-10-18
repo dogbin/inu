@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"inu/dogbin"
+	"github.com/dogbin/inu/dogbin"
 
 	"github.com/urfave/cli"
 )
