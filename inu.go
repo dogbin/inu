@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
@@ -31,6 +32,12 @@ func main() {
 		Usage:       "The slug to use instead of the server generated one [haste doesn't support this]",
 		Destination: &slug,
 	}
+	fileFlag := cli.StringFlag{
+		Name:        "file, f",
+		Usage:       "A file to upload to dogbin",
+		TakesFile:   true,
+		Destination: &file,
+	}
 
 	app := cli.NewApp()
 	app.Name = "inu"
@@ -48,6 +55,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		serverFlag,
 		slugFlag,
+		fileFlag,
 	}
 	app.Commands = []cli.Command{
 		{
@@ -58,6 +66,7 @@ func main() {
 			Flags: []cli.Flag{
 				serverFlag,
 				slugFlag,
+				fileFlag,
 			},
 		},
 		{
@@ -89,7 +98,15 @@ func put(c *cli.Context) error {
 	if info.Mode()&os.ModeNamedPipe != 0 {
 		content = readStdin()
 		if c.NArg() == 1 {
-			fmt.Println(c.Args())
+			slug = c.Args()[0]
+		}
+	} else if file != "" {
+		buf, err := ioutil.ReadFile(file)
+		if err != nil {
+			return err
+		}
+		content = string(buf)
+		if c.NArg() == 1 {
 			slug = c.Args()[0]
 		}
 	} else {
