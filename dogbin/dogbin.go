@@ -1,3 +1,4 @@
+// Package dogbin provides a simple go client library for dogbin and hastebin.
 package dogbin
 
 import (
@@ -9,34 +10,38 @@ import (
 	"net/url"
 )
 
-// Super basic dogbin/hastebin client library
-
-type Dogbin struct {
+// Server defines the dogbin or hastebin server to communicate with
+type Server struct {
 	server string
-	legacy bool
 }
 
+// UploadRequest represents the json used internally for uploads to the dogbin extended API
 type UploadRequest struct {
 	Slug    string `json:"slug"`
 	Content string `json:"content"`
 }
 
+// UploadResult represents the json returned for upload requests
 type UploadResult struct {
 	IsUrl bool   `json:"isUrl"`
 	Slug  string `json:"key"`
 	Url   string `json:"-"`
 }
 
+// Message represents the json format used by the server for errors
 type Message struct {
 	Message string `json:"message"`
 }
 
+// Wrapper represents the JSON response from hastebin/dogbin which in the case of dogbin simply exists for legacy purposes and
+// wraps around the actual document.
 type Wrapper struct {
 	Content  string    `json:"data"`
 	Document *Document `json:"document,omitempty"`
 	Slug     string    `json:"key"`
 }
 
+// Document represents the dogbin document structure and is used for both dogbin and hastebin here
 type Document struct {
 	Slug      string `json:"_id"`
 	IsUrl     bool   `json:"isUrl"`
@@ -44,7 +49,10 @@ type Document struct {
 	ViewCount int    `json:"viewCount"`
 }
 
-func (d Dogbin) Put(slug string, content string) (*UploadResult, error) {
+// Put uploads content to the server,
+// if a slug is supplied it is assumed that the server supports
+// the extended api used by dogbin.
+func (d Server) Put(slug string, content string) (*UploadResult, error) {
 	if content == "" {
 		return nil, errors.New("no content was provided")
 	}
@@ -88,7 +96,8 @@ func (d Dogbin) Put(slug string, content string) (*UploadResult, error) {
 	return result, err
 }
 
-func (d Dogbin) Get(slug string) (*Document, error) {
+// Get gets a *Document from the server for the supplied slug
+func (d Server) Get(slug string) (*Document, error) {
 	u, err := d.getUrl(slug)
 	if err != nil {
 		return nil, err
@@ -124,7 +133,8 @@ func (d Dogbin) Get(slug string) (*Document, error) {
 	return &document, err
 }
 
-func (d Dogbin) baseUrl() (string, error) {
+// baseUrl returns the base Url for the server, assuming https if no scheme has been supplied
+func (d Server) baseUrl() (string, error) {
 	srv, err := url.Parse(d.server)
 	if err != nil {
 		return "", err
@@ -135,7 +145,8 @@ func (d Dogbin) baseUrl() (string, error) {
 	return srv.String(), nil
 }
 
-func (d Dogbin) slugUrl(slug string) (string, error) {
+// slugUrl returns the Url of the document with the supplied slug
+func (d Server) slugUrl(slug string) (string, error) {
 	base, err := d.baseUrl()
 	if err != nil {
 		return "", nil
@@ -143,7 +154,8 @@ func (d Dogbin) slugUrl(slug string) (string, error) {
 	return fmt.Sprintf("%s/%s", base, slug), nil
 }
 
-func (d Dogbin) getUrl(slug string) (string, error) {
+// getUrl returns the Url to get details about the document with the supplied slug
+func (d Server) getUrl(slug string) (string, error) {
 	base, err := d.baseUrl()
 	if err != nil {
 		return "", nil
@@ -151,7 +163,8 @@ func (d Dogbin) getUrl(slug string) (string, error) {
 	return fmt.Sprintf("%s/documents/%s", base, slug), nil
 }
 
-func (d Dogbin) putUrl() (string, error) {
+// putUrl returns the Url of the upload endpoint
+func (d Server) putUrl() (string, error) {
 	base, err := d.baseUrl()
 	if err != nil {
 		return "", nil
@@ -159,15 +172,17 @@ func (d Dogbin) putUrl() (string, error) {
 	return fmt.Sprintf("%s/documents", base), nil
 }
 
-func New(server string) Dogbin {
-	return Dogbin{server: server}
+// NewServer returns a new Server configured for the supplied dogbin/hastebin instance
+func NewServer(server string) Server {
+	return Server{server: server}
 }
 
-// The del.dog public dogbin instance
-func Default() Dogbin {
-	return Dogbin{server: "del.dog"}
+// Dogbin returns a Server instance configured for the public del.dog dogbin instance
+func Dogbin() Server {
+	return Server{server: "del.dog"}
 }
 
-func Hastebin() Dogbin {
-	return Dogbin{server: "hastebin.com"}
+// Hastebin returns a Server instance configured for the public hastebin.com hastebin instance
+func Hastebin() Server {
+	return Server{server: "hastebin.com"}
 }

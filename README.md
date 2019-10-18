@@ -2,6 +2,8 @@
 
 > Use dogbin/hastebin from your cli
 
+[![GoDoc](https://godoc.org/github.com/dogbin/inu/dogbin?status.svg)](https://godoc.org/github.com/dogbin/inu/dogbin)
+
 ## Installation:
 
 Ensure you have [Go](https://golang.org) installed, and run:
