@@ -1,4 +1,4 @@
-module inu
+module github.com/dogbin/inu
 
 go 1.13
 
