@@ -63,7 +63,7 @@ func main() {
 			Email: "me@deletescape.ch",
 		},
 	}
-	app.Version = "0.1.0"
+	app.Version = "0.1.1"
 	app.EnableBashCompletion = true
 	app.Action = put
 	app.Flags = []cli.Flag{
@@ -142,7 +142,7 @@ func put(c *cli.Context) error {
 		}
 	}
 
-	result, err := dogbin.New(server).Put(slug, content)
+	result, err := dogbin.NewServer(server).Put(slug, content)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -201,7 +201,7 @@ func get(c *cli.Context) error {
 		tmp = strings.SplitN(tmp, ".", 2)[0]
 	}
 
-	doc, err := dogbin.New(server).Get(tmp)
+	doc, err := dogbin.NewServer(server).Get(tmp)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
