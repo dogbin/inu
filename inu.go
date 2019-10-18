@@ -63,7 +63,7 @@ func main() {
 			Email: "me@deletescape.ch",
 		},
 	}
-	app.Version = "0.0.1"
+	app.Version = "0.1.0"
 	app.EnableBashCompletion = true
 	app.Action = put
 	app.Flags = []cli.Flag{
