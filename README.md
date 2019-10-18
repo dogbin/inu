@@ -3,12 +3,15 @@
 > Use dogbin/hastebin from your cli
 
 ## Installation:
+
 Ensure you have [Go](https://golang.org) installed, and run:
+
 ```bash
 deletescape@nortia:~$ go get github.com/dogbin/inu
 ```
 
 ## Usage:
+
 ```bash
 deletescape@nortia:~$ inu help
 NAME:
@@ -18,7 +21,7 @@ USAGE:
    inu [global options] command [command options] [arguments...]
 
 VERSION:
-   0.0.1
+   0.1.0
 
 AUTHOR:
    Till Kottmann <me@deletescape.ch>
@@ -29,8 +32,11 @@ COMMANDS:
    help, h          Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --server value, -r value  The dogbin/hastebin server to use (default: "del.dog")
+   --server value, -r value  The dogbin/hastebin server to use (default: "del.dog") [%DOGBIN_SERVER%] [~/.inu/server]
    --slug value, -s value    The slug to use instead of the server generated one [haste doesn't support this]
+   --file value, -f value    A file to upload to dogbin
+   --json, -j                Outputs the result as JSON
+   --copy, -c                Additionally puts the created URL in your clipboard
    --help, -h                show help
    --version, -v             print the version
 
@@ -39,6 +45,7 @@ COPYRIGHT:
 ```
 
 You can also simply pipe into the `inu` command like this:
+
 ```bash
 deletescape@nortia:~$ echo "Awesome test for README" | inu
 https://del.dog/nodabaqisa
