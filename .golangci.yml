@@ -1,0 +1,30 @@
+run:
+  deadline: 10s
+  tests: true
+
+linters-settings:
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+
+linters:
+  disable-all: true
+  enable:
+    - golint
+    - govet
+    - errcheck
+    - deadcode
+    - structcheck
+    - varcheck
+    - ineffassign
+    - typecheck
+    - dupl
+    - goconst
+    - gosec
+    - staticcheck
