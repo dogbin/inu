@@ -10,3 +10,12 @@ env:
   global:
     - GOPROXY=https://proxy.golang.org
     - GO111MODULE=on
+
+before_script:
+- chmod +x test.sh
+
+script:
+- ./test.sh
+
+after_success:
+- bash <(curl -s https://codecov.io/bash)

@@ -5,6 +5,7 @@
 [![GoDoc](https://godoc.org/github.com/dogbin/inu/dogbin?status.svg)](https://godoc.org/github.com/dogbin/inu/dogbin)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dogbin/inu)](https://goreportcard.com/report/github.com/dogbin/inu)
 [![Build Status](https://travis-ci.com/dogbin/inu.svg?branch=master)](https://travis-ci.com/dogbin/inu)
+[![Code Coverage](https://img.shields.io/codecov/c/github/dogbin/inu)](https://codecov.io/gh/dogbin/inu/)
 
 ## Installation:
 
