@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,6 +18,7 @@ import (
 var server string
 var slug string
 var file string
+var jsonOutput bool
 
 func main() {
 	serverFlag := cli.StringFlag{
@@ -38,6 +40,11 @@ func main() {
 		TakesFile:   true,
 		Destination: &file,
 	}
+	jsonFlag := cli.BoolFlag{
+		Name:        "json, j",
+		Usage:       "Outputs the result as JSON",
+		Destination: &jsonOutput,
+	}
 
 	app := cli.NewApp()
 	app.Name = "inu"
@@ -56,6 +63,7 @@ func main() {
 		serverFlag,
 		slugFlag,
 		fileFlag,
+		jsonFlag,
 	}
 	app.Commands = []cli.Command{
 		{
@@ -67,6 +75,7 @@ func main() {
 				serverFlag,
 				slugFlag,
 				fileFlag,
+				jsonFlag,
 			},
 		},
 		{
@@ -81,6 +90,7 @@ func main() {
 					Usage:       "The slug of the paste to retrieve",
 					Destination: &slug,
 				},
+				jsonFlag,
 			},
 		},
 	}
@@ -122,7 +132,14 @@ func put(c *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
-	fmt.Println(result.Url)
+	if jsonOutput {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+
+		return enc.Encode(result)
+	} else {
+		fmt.Println(result.Url)
+	}
 	return nil
 }
 
@@ -167,7 +184,14 @@ func get(c *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
-	fmt.Println(doc.Content)
+	if jsonOutput {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+
+		return enc.Encode(doc)
+	} else {
+		fmt.Println(doc.Content)
+	}
 	return nil
 }
 
