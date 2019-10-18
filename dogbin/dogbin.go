@@ -145,7 +145,7 @@ func (d Server) Get(slug string) (*Document, error) {
 	if err = json.NewDecoder(r.Body).Decode(wrapper); err != nil {
 		return nil, fmt.Errorf("unable to decode response: %w", err)
 	}
-	if wrapper == nil {
+	if wrapper == nil || (wrapper.Content == "" && wrapper.Slug == "" && wrapper.Document == nil) {
 		return nil, errors.New("unable to decode response: document is empty")
 	}
 
