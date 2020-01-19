@@ -19,6 +19,7 @@ const (
 // Server defines the dogbin or hastebin server to communicate with
 type Server struct {
 	server string
+	apiKey string
 }
 
 // UploadRequest represents the json used internally for uploads to the dogbin extended API
@@ -92,7 +93,15 @@ func (d Server) Put(slug string, content string) (*UploadResult, error) {
 			Content: content,
 		})
 	}
-	r, err := http.Post(u, mime, bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", u, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", mime)
+	if d.apiKey != "" {
+		req.Header.Set("X-Api-Key", d.apiKey)
+	}
+	r, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -196,8 +205,8 @@ func (d Server) putUrl() (string, error) {
 }
 
 // NewServer returns a new Server configured for the supplied dogbin/hastebin instance
-func NewServer(server string) Server {
-	return Server{server: server}
+func NewServer(server, apiKey string) Server {
+	return Server{server: server, apiKey: apiKey}
 }
 
 // Dogbin returns a Server instance configured for the public 'del.dog' dogbin instance

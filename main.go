@@ -20,12 +20,13 @@ const (
 	appAuthorEmail = "me@deletescape.ch"
 	appCopyright   = "(c) 2019 " + appAuthorName
 	appName        = "inu"
-	appVersion     = "v0.1.2"
+	appVersion     = "v0.1.3"
 )
 
 var (
 	file            string
 	server          string
+	apiKey			string
 	slug            string
 	clipboardOutput bool
 	jsonOutput      bool
@@ -61,6 +62,14 @@ func main() {
 		Usage:       "Additionally puts the created URL in your clipboard",
 		Destination: &clipboardOutput,
 	}
+	apiKeyFlag := cli.StringFlag{
+		Name:        "key, k",
+		Usage:       "The dogbin api key to use",
+		Value:       "",
+		EnvVar:      "DOGBIN_KEY",
+		FilePath:    "~/.inu/key",
+		Destination: &apiKey,
+	}
 
 	app := cli.NewApp()
 	app.Name = appName
@@ -81,6 +90,7 @@ func main() {
 		fileFlag,
 		jsonFlag,
 		clipboardFlag,
+		apiKeyFlag,
 	}
 	app.Commands = []cli.Command{
 		{
@@ -94,6 +104,7 @@ func main() {
 				fileFlag,
 				jsonFlag,
 				clipboardFlag,
+				apiKeyFlag,
 			},
 		},
 		{
@@ -155,7 +166,7 @@ func put(c *cli.Context) error {
 		}
 	}
 
-	result, err := dogbin.NewServer(server).Put(slug, content)
+	result, err := dogbin.NewServer(server, strings.TrimSpace(apiKey)).Put(slug, content)
 	if err != nil {
 		return cli.NewExitError(err, 1)
 	}
@@ -211,7 +222,7 @@ func get(c *cli.Context) error {
 		pasteURL = strings.SplitN(pasteURL, ".", 2)[0]
 	}
 
-	doc, err := dogbin.NewServer(server).Get(pasteURL)
+	doc, err := dogbin.NewServer(server, strings.TrimSpace(apiKey)).Get(pasteURL)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
