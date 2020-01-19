@@ -70,20 +70,20 @@ func TestMain(m *testing.M) {
 	ts := httptest.NewServer(http.HandlerFunc(handler))
 	defer ts.Close()
 	serverUrl = ts.URL
-	local = NewServer(ts.URL)
+	local = NewServer(ts.URL, "")
 	os.Exit(m.Run())
 }
 
 func TestNewServer(t *testing.T) {
 	assert := assert.New(t)
 
-	custom := NewServer("http://test")
+	custom := NewServer("http://test", "")
 	assert.Equal("http://test", custom.server)
 	base, err := custom.baseUrl()
 	assert.Nil(err)
 	assert.Equal("http://test", base)
 
-	customPort := NewServer("http://test:90")
+	customPort := NewServer("http://test:90", "")
 	assert.Equal("http://test:90", customPort.server)
 	base, err = customPort.baseUrl()
 	assert.Nil(err)
