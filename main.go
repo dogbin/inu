@@ -249,6 +249,7 @@ func readStdin() string {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		input = append(input, scanner.Bytes()...)
+		input = append(input, '\n')
 	}
 
 	return string(input)
